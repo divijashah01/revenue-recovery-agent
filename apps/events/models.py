@@ -5,6 +5,7 @@ class Customer(models.Model):
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=20, blank=True)   # E.164 format, used for WhatsApp
     email = models.EmailField(blank=True)
+    opted_out = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
