@@ -5,6 +5,7 @@ from .channels.email_channel import send_email_reminder
 from .channels.sms_channel import send_sms_reminder
 from apps.intelligence.message_composer import compose_email
 from apps.intelligence.escalation_briefing import generate_escalation_brief
+from apps.portal.services import get_or_create_portal_link, portal_url
 
 WHATSAPP_ACTIONS = {"whatsapp_nudge", "send_payment_link", "promise_to_pay"}
 EMAIL_ACTIONS = {"email_reminder"}
@@ -56,6 +57,8 @@ def execute_decision(revenue_event):
         result = send_whatsapp_template(customer.phone, template, params=[customer.name, str(revenue_event.amount)])
     elif action in EMAIL_ACTIONS:
         subject, body = compose_email(customer, revenue_event, revenue_event.diagnosis)
+        link = get_or_create_portal_link(revenue_event)
+        body += f"\n\nView details and resolve: {portal_url(link)}"
         result = send_email_reminder(customer.email, subject, body)
     elif action in SMS_ACTIONS:
         result = send_sms_reminder(customer.phone, f"₹{revenue_event.amount} payment pending. Please complete.")

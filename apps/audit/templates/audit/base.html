@@ -13,10 +13,14 @@
         <div class="navlinks">
             <a href="{% url 'dashboard' %}">Dashboard</a>
             <a href="{% url 'batch-list' %}">Batch</a>
+            <a href="{% url 'shadow-mode' %}">Shadow Mode</a>
             <a href="/admin/">Admin</a>
         </div>
     </nav>
     <main class="page">
+        {% if messages %}
+            {% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+        {% endif %}
         {% block content %}{% endblock %}
     </main>
 </body>

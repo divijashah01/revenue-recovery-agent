@@ -1,0 +1,40 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Update</title>
+    <link rel="stylesheet" href="{% static 'portal/css/portal.css' %}">
+</head>
+<body>
+    {% if messages %}
+        {% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+    {% endif %}
+
+    <div class="card">
+        <h1>Hi {{ customer.name }},</h1>
+
+        {% if recovered %}
+            <p class="status-line success">This has already been resolved — thank you!</p>
+        {% elif opted_out %}
+            <p class="status-line muted">You've opted out of reminders for this. No further action needed.</p>
+        {% else %}
+            <p class="reason">{{ reason_text }}</p>
+            <p class="amount">Amount: ₹{{ event.amount }}</p>
+
+            {% if payment_link_url %}
+                <a href="{{ payment_link_url }}" class="btn-primary" target="_blank">Complete Payment</a>
+            {% else %}
+                <p class="muted">Payment link temporarily unavailable — please contact support.</p>
+            {% endif %}
+
+            <form method="post" action="{% url 'portal-opt-out' event.portal_link.token %}" class="opt-out-form">
+                {% csrf_token %}
+                <button type="submit" class="btn-secondary">Stop reminders about this</button>
+            </form>
+            <p class="fine-print">We won't contact you again about this after you opt out.</p>
+        {% endif %}
+    </div>
+</body>
+</html>

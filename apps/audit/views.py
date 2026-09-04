@@ -5,6 +5,9 @@ from django.core.paginator import Paginator
 from apps.events.models import RevenueEvent
 from apps.decisioning.models import Decision
 
+from django.core.management import call_command
+from django.contrib import messages as dj_messages
+from django.shortcuts import render, get_object_or_404, redirect
 
 def dashboard_view(request):
     events = RevenueEvent.objects.all()
@@ -88,3 +91,35 @@ def event_detail_view(request, event_id):
         "audit_trail": event.audit_trail.all().order_by("created_at"),
     }
     return render(request, "audit/event_detail.html", context)
+
+def shadow_mode_view(request):
+    """
+    Shows projected recovery for events that are diagnosed + decided but
+    NOT yet executed — nothing sent, no money moved. 'Run Live Batch'
+    converts the projection into real execution + outcome simulation.
+    """
+    if request.method == "POST":
+        call_command("run_execution")
+        call_command("simulate_recovery_outcomes")
+        call_command("recalibrate_rules")
+        dj_messages.success(request, "Live batch executed — dashboard now reflects real outcomes.")
+        return redirect("dashboard")
+
+    decided_events = RevenueEvent.objects.filter(status="decided").select_related("decision")
+    at_risk = decided_events.aggregate(total=Sum("amount"))["total"] or 0
+
+    projected_recovery = 0.0
+    for event in decided_events:
+        decision = getattr(event, "decision", None)
+        if decision and decision.expected_recovery_probability:
+            projected_recovery += float(decision.expected_recovery_probability) * float(event.amount)
+
+    projected_rate = round((projected_recovery / float(at_risk) * 100), 1) if at_risk else 0
+
+    context = {
+        "pending_count": decided_events.count(),
+        "at_risk": at_risk,
+        "projected_recovery": round(projected_recovery, 2),
+        "projected_rate": projected_rate,
+    }
+    return render(request, "audit/shadow_mode.html", context)

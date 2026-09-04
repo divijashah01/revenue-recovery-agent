@@ -1,0 +1,13 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: system-ui, sans-serif; background: #f8fafc; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+.card { background: white; border-radius: 14px; padding: 32px; max-width: 420px; width: 100%; box-shadow: 0 4px 20px rgba(0,0,0,0.08); }
+h1 { font-size: 1.3rem; margin-bottom: 16px; }
+.reason { color: #475569; margin-bottom: 16px; line-height: 1.5; }
+.amount { font-size: 1.4rem; font-weight: 700; margin-bottom: 24px; }
+.btn-primary { display: inline-block; background: #10b981; color: white; padding: 12px 20px; border-radius: 8px; text-decoration: none; font-weight: 600; width: 100%; text-align: center; }
+.opt-out-form { margin-top: 20px; }
+.btn-secondary { width: 100%; background: none; border: 1px solid #cbd5e1; color: #64748b; padding: 10px; border-radius: 8px; cursor: pointer; }
+.fine-print { font-size: 0.75rem; color: #94a3b8; margin-top: 10px; text-align: center; }
+.status-line.success { color: #10b981; font-weight: 600; }
+.status-line.muted { color: #64748b; }
+.flash { background: #dbeafe; color: #1e40af; padding: 10px; border-radius: 8px; margin-bottom: 16px; text-align: center; }

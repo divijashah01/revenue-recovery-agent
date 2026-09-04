@@ -145,3 +145,5 @@ EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 GEMINI_API_KEY = config("GEMINI_API_KEY")
 GEMINI_FAST_MODEL = "gemini-3.5-flash-lite"
 GEMINI_REASONING_MODEL = "gemini-3.6-flash"
+
+SITE_BASE_URL = config("SITE_BASE_URL", default="http://127.0.0.1:8000")

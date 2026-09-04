@@ -1,0 +1,31 @@
+{% extends "audit/base.html" %}
+{% block title %}Shadow Mode{% endblock %}
+
+{% block content %}
+<h1>Shadow Mode — Backtest Before You Trust It</h1>
+<p class="event-meta">These {{ pending_count }} events have been diagnosed and decided, but nothing has been sent yet. This is what the agent projects it will recover, before any message goes out or any money moves.</p>
+
+<div class="kpi-grid">
+    <div class="kpi-card at-risk">
+        <span class="kpi-label">Pending At Risk</span>
+        <span class="kpi-value">₹{{ at_risk|floatformat:0 }}</span>
+    </div>
+    <div class="kpi-card recovered">
+        <span class="kpi-label">Projected Recovery</span>
+        <span class="kpi-value">₹{{ projected_recovery|floatformat:0 }}</span>
+    </div>
+    <div class="kpi-card rate">
+        <span class="kpi-label">Projected Rate</span>
+        <span class="kpi-value">{{ projected_rate }}%</span>
+    </div>
+</div>
+
+{% if pending_count > 0 %}
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn-primary">Run Live Batch (send real messages, record real outcomes)</button>
+</form>
+{% else %}
+<p class="event-meta">No pending decided events. Seed a fresh batch and run the pipeline (without execution) to see a projection here.</p>
+{% endif %}
+{% endblock %}

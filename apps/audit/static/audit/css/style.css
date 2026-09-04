@@ -51,3 +51,6 @@ th { color: #94a3b8; font-weight: 600; }
 .timeline li { border-left: 2px solid #334155; padding: 8px 0 8px 16px; margin-bottom: 8px; }
 pre { background: #0f172a; padding: 10px; border-radius: 6px; overflow-x: auto; font-size: 0.8rem; margin-top: 6px; }
 details summary { cursor: pointer; color: #60a5fa; }
+
+.btn-primary { background: #10b981; color: #0f172a; border: none; padding: 12px 20px; border-radius: 8px; font-weight: 600; cursor: pointer; }
+.flash { background: #1e40af; color: #dbeafe; padding: 10px 16px; border-radius: 8px; margin-bottom: 16px; }
