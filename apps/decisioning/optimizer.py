@@ -6,6 +6,7 @@ from myproject.intervention_costs import (
 )
 from .models import InterventionRule, Decision
 from .guards import can_attempt, ESCALATION_AMOUNT_THRESHOLD
+from apps.audit.services import log_audit
 
 ACTION_COSTS = {
     "retry_payment": 0.0,
@@ -94,5 +95,11 @@ def decide(revenue_event, diagnosis):
 
     revenue_event.status = "stopped" if chosen_action == "stop" else "decided"
     revenue_event.save(update_fields=["status", "updated_at"])
+
+    log_audit(revenue_event, "decided", {
+        "chosen_action": decision.chosen_action,
+        "expected_value": float(decision.expected_value),
+        "reason": decision.reason,
+    })
 
     return decision

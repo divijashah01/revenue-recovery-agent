@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     "apps.execution",
     "apps.audit",
     "apps.portal",
+    "apps.intelligence",
 ]
 
 MIDDLEWARE = [

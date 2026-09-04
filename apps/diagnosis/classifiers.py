@@ -1,5 +1,6 @@
 from django.utils import timezone
 from .models import Diagnosis
+from apps.audit.services import log_audit
 
 # Maps Razorpay's real error_reason values to our root-cause codes.
 PAYMENT_FAILURE_MAP = {
@@ -59,5 +60,11 @@ def diagnose(revenue_event):
 
     revenue_event.status = "diagnosed"
     revenue_event.save(update_fields=["status", "updated_at"])
+
+    log_audit(revenue_event, "diagnosed", {
+        "root_cause": diagnosis.root_cause,
+        "explanation": diagnosis.explanation,
+        "confidence": diagnosis.confidence,
+    })
 
     return diagnosis
