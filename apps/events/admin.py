@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Customer, CheckoutSession, Invoice, RevenueEvent
+from .models import Customer, CheckoutSession, Invoice, RevenueEvent, PaymentAttemptLog
 
 
 @admin.register(Customer)
@@ -25,3 +25,8 @@ class RevenueEventAdmin(admin.ModelAdmin):
     list_display = ("id", "event_type", "customer", "amount", "status", "source", "error_reason", "detected_at")
     list_filter = ("event_type", "status", "source")
     readonly_fields = ("raw_payload", "detected_at", "updated_at")
+
+@admin.register(PaymentAttemptLog)
+class PaymentAttemptLogAdmin(admin.ModelAdmin):
+    list_display = ("customer", "attempt_number", "status", "latency_ms", "created_at")
+    list_filter = ("status",)

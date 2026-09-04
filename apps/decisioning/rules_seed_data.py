@@ -52,4 +52,10 @@ RULES = [
 
     ("severely_overdue", "promise_to_pay", 0.20, "Last automated attempt"),
     ("severely_overdue", "escalate_human", 0.40, "B2B receivables need a human at this stage"),
+
+    # payment_degradation root causes (predictive, pre-emptive intervention)
+    ("degradation_high_risk", "send_payment_link", 0.30, "Pre-emptive: refresh payment method before hard failure"),
+    ("degradation_high_risk", "whatsapp_nudge", 0.25, "Pre-emptive reminder before failure occurs"),
+    ("degradation_moderate_risk", "whatsapp_nudge", 0.18, "Lighter-touch pre-emptive nudge, lower confidence"),
+    ("degradation_moderate_risk", "email_reminder", 0.10, "Cheapest pre-emptive touch given ambiguity"),
 ]

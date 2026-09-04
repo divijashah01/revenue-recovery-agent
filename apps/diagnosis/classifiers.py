@@ -48,6 +48,20 @@ def diagnose(revenue_event):
         else:
             root_cause, explanation, confidence = "severely_overdue", f"{days_overdue} days overdue", 1.0
 
+    elif revenue_event.event_type == "payment_degradation":
+        payload = revenue_event.raw_payload or {}
+        score = payload.get("risk_score", 0.0)
+        signals = payload.get("signals", {})
+
+        if score >= 0.7:
+            root_cause = "degradation_high_risk"
+            explanation = f"High degradation risk (score={score}): {signals}"
+            confidence = score
+        else:
+            root_cause = "degradation_moderate_risk"
+            explanation = f"Moderate degradation risk (score={score}), signals ambiguous: {signals}"
+            confidence = 0.6
+
     else:
         root_cause, explanation, confidence = "unknown", "Unrecognized event type", 0.1
 

@@ -69,6 +69,7 @@ class RevenueEvent(models.Model):
         ("payment_failure", "Payment Failure"),
         ("checkout_abandonment", "Checkout Abandonment"),
         ("overdue_invoice", "Overdue Invoice"),
+        ("payment_degradation", "Payment Degradation (Predictive)"),
     ]
     SOURCE_CHOICES = [
         ("razorpay", "Razorpay Webhook"),
@@ -107,3 +108,27 @@ class RevenueEvent(models.Model):
 
     def __str__(self):
         return f"[{self.event_type}] ₹{self.amount} - {self.customer} ({self.status})"
+
+class PaymentAttemptLog(models.Model):
+    """
+    Raw, low-level payment attempt telemetry — separate from RevenueEvent.
+    This is what a real gateway integration would stream continuously.
+    Multiple soft-decline attempts here, before any hard failure, are what
+    the degradation detector reads to flag risk *before* revenue is lost —
+    this is the 'detects revenue at risk' pathway, not just reactive cleanup.
+    """
+    STATUS_CHOICES = [
+        ("success", "Success"),
+        ("soft_decline", "Soft Decline / Retry Needed"),
+        ("hard_decline", "Hard Decline"),
+    ]
+
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+    amount = models.DecimalField(max_digits=10, decimal_places=2)
+    attempt_number = models.PositiveIntegerField(default=1)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    latency_ms = models.PositiveIntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.customer} attempt #{self.attempt_number} - {self.status}"
