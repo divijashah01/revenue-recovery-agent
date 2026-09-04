@@ -1,0 +1,46 @@
+{% extends "audit/base.html" %}
+{% block title %}Batch - Revenue Recovery Agent{% endblock %}
+
+{% block content %}
+<h1>Event Batch</h1>
+
+<form method="get" class="filters">
+    <select name="event_type">
+        <option value="">All types</option>
+        {% for value, label in event_type_choices %}
+            <option value="{{ value }}" {% if value == selected_event_type %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <select name="status">
+        <option value="">All statuses</option>
+        {% for value, label in status_choices %}
+            <option value="{{ value }}" {% if value == selected_status %}selected{% endif %}>{{ label }}</option>
+        {% endfor %}
+    </select>
+    <button type="submit">Filter</button>
+</form>
+
+<table class="batch-table">
+    <thead>
+        <tr><th>Customer</th><th>Type</th><th>Amount</th><th>Status</th><th>Action</th><th></th></tr>
+    </thead>
+    <tbody>
+    {% for event in page_obj %}
+        <tr>
+            <td>{{ event.customer.name }}</td>
+            <td>{{ event.get_event_type_display }}</td>
+            <td>₹{{ event.amount }}</td>
+            <td><span class="badge badge-{{ event.status }}">{{ event.get_status_display }}</span></td>
+            <td>{{ event.decision.chosen_action|default:"—" }}</td>
+            <td><a href="{% url 'event-detail' event.id %}">View trail</a></td>
+        </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<div class="pagination">
+    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">&laquo; Prev</a>{% endif %}
+    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>{% endif %}
+</div>
+{% endblock %}

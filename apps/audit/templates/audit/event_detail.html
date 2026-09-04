@@ -1,0 +1,53 @@
+{% extends "audit/base.html" %}
+{% block title %}Event #{{ event.id }} - Audit Trail{% endblock %}
+
+{% block content %}
+<a href="{% url 'batch-list' %}">&laquo; Back to batch</a>
+<h1>Event #{{ event.id }} — {{ event.customer.name }}</h1>
+<p class="event-meta">₹{{ event.amount }} · {{ event.get_event_type_display }} · <span class="badge badge-{{ event.status }}">{{ event.get_status_display }}</span></p>
+
+{% if event.diagnosis %}
+<div class="detail-card">
+    <h3>Diagnosis</h3>
+    <p><strong>Root cause:</strong> {{ event.diagnosis.root_cause }}</p>
+    <p><strong>Explanation:</strong> {{ event.diagnosis.explanation }}</p>
+    <p><strong>Confidence:</strong> {{ event.diagnosis.confidence }}</p>
+</div>
+{% endif %}
+
+{% if event.decision %}
+<div class="detail-card">
+    <h3>Decision</h3>
+    <p><strong>Chosen action:</strong> {{ event.decision.chosen_action }}</p>
+    <p><strong>Reason:</strong> {{ event.decision.reason }}</p>
+    <p><strong>Expected value:</strong> ₹{{ event.decision.expected_value }}</p>
+    <details>
+        <summary>All candidates considered</summary>
+        <pre>{{ event.decision.candidates_considered }}</pre>
+    </details>
+</div>
+{% endif %}
+
+<div class="detail-card">
+    <h3>Attempts</h3>
+    <table>
+        <thead><tr><th>Action</th><th>Outcome</th><th>Time</th></tr></thead>
+        <tbody>
+        {% for attempt in attempts %}
+            <tr><td>{{ attempt.action }}</td><td>{{ attempt.outcome }}</td><td>{{ attempt.attempted_at }}</td></tr>
+        {% empty %}
+            <tr><td colspan="3">No attempts yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="detail-card">
+    <h3>Full Audit Timeline</h3>
+    <ul class="timeline">
+        {% for a in audit_trail %}
+            <li><strong>{{ a.stage }}</strong> — {{ a.created_at }}<pre>{{ a.detail }}</pre></li>
+        {% endfor %}
+    </ul>
+</div>
+{% endblock %}

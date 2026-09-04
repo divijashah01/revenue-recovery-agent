@@ -1,0 +1,74 @@
+{% extends "audit/base.html" %}
+{% load static %}
+{% block title %}Dashboard - Revenue Recovery Agent{% endblock %}
+
+{% block content %}
+<h1>Batch Recovery Summary</h1>
+
+<div class="kpi-grid">
+    <div class="kpi-card at-risk">
+        <span class="kpi-label">Revenue At Risk</span>
+        <span class="kpi-value">₹{{ at_risk_total|floatformat:0 }}</span>
+        <span class="kpi-sub">{{ total_events }} events</span>
+    </div>
+    <div class="kpi-card attempted">
+        <span class="kpi-label">Attempted</span>
+        <span class="kpi-value">₹{{ attempted_total|floatformat:0 }}</span>
+    </div>
+    <div class="kpi-card recovered">
+        <span class="kpi-label">Recovered</span>
+        <span class="kpi-value">₹{{ recovered_total|floatformat:0 }}</span>
+    </div>
+    <div class="kpi-card rate">
+        <span class="kpi-label">Recovery Rate</span>
+        <span class="kpi-value">{{ recovery_rate }}%</span>
+    </div>
+</div>
+
+<div class="secondary-stats">
+    <span><strong>{{ escalated_count }}</strong> escalated to human</span>
+    <span><strong>{{ stopped_count }}</strong> stopped (compliant / ROI-based)</span>
+</div>
+
+<div class="chart-grid">
+    <div class="chart-card">
+        <h3>By Leak Type</h3>
+        <canvas id="typeChart"></canvas>
+    </div>
+    <div class="chart-card">
+        <h3>By Status</h3>
+        <canvas id="statusChart"></canvas>
+    </div>
+</div>
+
+<div class="table-card">
+    <h3>Why the Agent Stopped</h3>
+    <table>
+        <thead><tr><th>Reason</th><th>Count</th></tr></thead>
+        <tbody>
+        {% for row in stop_reasons %}
+            <tr><td>{{ row.reason }}</td><td>{{ row.count }}</td></tr>
+        {% empty %}
+            <tr><td colspan="2">No stop events yet.</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="table-card">
+    <h3>Actions Taken</h3>
+    <table>
+        <thead><tr><th>Action</th><th>Count</th></tr></thead>
+        <tbody>
+        {% for row in by_action %}
+            <tr><td>{{ row.chosen_action }}</td><td>{{ row.count }}</td></tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+{{ by_type|json_script:"by-type-data" }}
+{{ by_status|json_script:"by-status-data" }}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script src="{% static 'audit/js/dashboard.js' %}"></script>
+{% endblock %}

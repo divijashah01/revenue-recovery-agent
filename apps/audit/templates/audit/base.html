@@ -1,0 +1,23 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Revenue Recovery Agent{% endblock %}</title>
+    <link rel="stylesheet" href="{% static 'audit/css/style.css' %}">
+</head>
+<body>
+    <nav class="topnav">
+        <div class="brand">Revenue Recovery Agent</div>
+        <div class="navlinks">
+            <a href="{% url 'dashboard' %}">Dashboard</a>
+            <a href="{% url 'batch-list' %}">Batch</a>
+            <a href="/admin/">Admin</a>
+        </div>
+    </nav>
+    <main class="page">
+        {% block content %}{% endblock %}
+    </main>
+</body>
+</html>
