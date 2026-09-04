@@ -1,6 +1,7 @@
 from django.utils import timezone
 from .models import Diagnosis
 from apps.audit.services import log_audit
+from apps.intelligence.diagnosis_reasoner import reason_about_ambiguous_case
 
 # Maps Razorpay's real error_reason values to our root-cause codes.
 PAYMENT_FAILURE_MAP = {
@@ -25,10 +26,12 @@ def diagnose(revenue_event):
     """Classifies a RevenueEvent into a root cause and writes the Diagnosis row."""
 
     if revenue_event.event_type == "payment_failure":
-        root_cause, explanation, confidence = PAYMENT_FAILURE_MAP.get(
-            revenue_event.error_reason,
-            ("unmapped_failure", f"Unrecognized error_reason: {revenue_event.error_reason}", 0.3),
-        )
+        if revenue_event.error_reason in PAYMENT_FAILURE_MAP:
+            root_cause, explanation, confidence = PAYMENT_FAILURE_MAP[revenue_event.error_reason]
+        else:
+            root_cause, explanation, confidence = reason_about_ambiguous_case(
+                revenue_event, "unmapped_failure", f"Unrecognized error_reason: {revenue_event.error_reason}"
+            )
 
     elif revenue_event.event_type == "checkout_abandonment":
         stage = revenue_event.checkout_session.stage if revenue_event.checkout_session else "cart"
@@ -58,9 +61,9 @@ def diagnose(revenue_event):
             explanation = f"High degradation risk (score={score}): {signals}"
             confidence = score
         else:
-            root_cause = "degradation_moderate_risk"
-            explanation = f"Moderate degradation risk (score={score}), signals ambiguous: {signals}"
-            confidence = 0.6
+            root_cause, explanation, confidence = reason_about_ambiguous_case(
+                revenue_event, "degradation_moderate_risk", f"Moderate risk (score={score}): {signals}"
+            )
 
     else:
         root_cause, explanation, confidence = "unknown", "Unrecognized event type", 0.1

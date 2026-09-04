@@ -3,6 +3,8 @@ from apps.audit.services import log_audit
 from .channels.whatsapp import send_whatsapp_template
 from .channels.email_channel import send_email_reminder
 from .channels.sms_channel import send_sms_reminder
+from apps.intelligence.message_composer import compose_email
+from apps.intelligence.escalation_briefing import generate_escalation_brief
 
 WHATSAPP_ACTIONS = {"whatsapp_nudge", "send_payment_link", "promise_to_pay"}
 EMAIL_ACTIONS = {"email_reminder"}
@@ -33,7 +35,8 @@ def execute_decision(revenue_event):
         attempt = InterventionAttempt.objects.create(revenue_event=revenue_event, action=action, outcome="pending")
         revenue_event.status = "escalated"
         revenue_event.save(update_fields=["status", "updated_at"])
-        log_audit(revenue_event, "action_attempted", {"action": action, "note": "queued for human agent"})
+        brief = generate_escalation_brief(revenue_event)
+        log_audit(revenue_event, "action_attempted", {"action": action, "brief": brief})
         return attempt
 
     if action == "retry_payment":
@@ -52,11 +55,8 @@ def execute_decision(revenue_event):
         template = TEMPLATE_MAP.get(action, "payment_reminder_nudge")
         result = send_whatsapp_template(customer.phone, template, params=[customer.name, str(revenue_event.amount)])
     elif action in EMAIL_ACTIONS:
-        result = send_email_reminder(
-            customer.email,
-            "Regarding your recent payment",
-            f"Hi {customer.name}, we noticed an issue with a payment of ₹{revenue_event.amount}. Please follow up.",
-        )
+        subject, body = compose_email(customer, revenue_event, revenue_event.diagnosis)
+        result = send_email_reminder(customer.email, subject, body)
     elif action in SMS_ACTIONS:
         result = send_sms_reminder(customer.phone, f"₹{revenue_event.amount} payment pending. Please complete.")
 

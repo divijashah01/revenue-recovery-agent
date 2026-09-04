@@ -35,6 +35,7 @@ class Command(BaseCommand):
                 name=fake.name(),
                 phone=f"+91{fake.msisdn()[3:]}",
                 email=fake.email(),
+                language_preference=random.choices(["en", "hi-en"], weights=[0.7, 0.3])[0],
             )
 
             leak_type = random.choices(

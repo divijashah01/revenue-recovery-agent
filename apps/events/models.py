@@ -2,10 +2,15 @@ from django.db import models
 
 
 class Customer(models.Model):
+    LANGUAGE_CHOICES = [
+        ("en", "English"),
+        ("hi-en", "Hinglish"),
+    ]
     name = models.CharField(max_length=255)
     phone = models.CharField(max_length=20, blank=True)   # E.164 format, used for WhatsApp
     email = models.EmailField(blank=True)
     opted_out = models.BooleanField(default=False)
+    language_preference = models.CharField(max_length=10, choices=LANGUAGE_CHOICES, default="en")
     created_at = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
@@ -105,6 +110,8 @@ class RevenueEvent(models.Model):
 
     detected_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    recovered_amount = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
 
     def __str__(self):
         return f"[{self.event_type}] ₹{self.amount} - {self.customer} ({self.status})"
