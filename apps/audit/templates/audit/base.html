@@ -11,11 +11,16 @@
     <nav class="topnav">
         <div class="brand">Revenue Recovery Agent</div>
         <div class="navlinks">
-            <a href="{% url 'dashboard' %}">Dashboard</a>
-            <a href="{% url 'batch-list' %}">Batch</a>
-            <a href="{% url 'shadow-mode' %}">Shadow Mode</a>
-            <a href="{% url 'inject-live-event' %}">Inject Live</a>
-            <a href="/admin/">Admin</a>
+            {% if user.profile.role == "agent" %}
+                <a href="{% url 'agent-queue' %}">My Queue</a>
+            {% else %}
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'batch-list' %}">Batch</a>
+                <a href="{% url 'shadow-mode' %}">Shadow Mode</a>
+                <a href="{% url 'inject-live-event' %}">Inject Live</a>
+                <a href="/admin/">Admin</a>
+            {% endif %}
+            <a href="{% url 'logout' %}">Logout</a>
         </div>
     </nav>
     <main class="page">

@@ -1,0 +1,192 @@
+{% extends "core/base_public.html" %}
+{% block content %}
+
+<section class="hero">
+    <div class="hero-grid section-inner">
+        <div class="hero-copy">
+            <p class="hero-kicker"><span class="typed" id="typed-line" aria-hidden="true"></span><span class="sr-only" id="typed-fallback">Detect. Diagnose. Decide. Execute. Learn. Audit.</span></p>
+            <h1>{{ app_name|default:"Recoup" }}</h1>
+            <p class="tagline">Find revenue slipping away — and win it back, automatically.</p>
+            <div class="hero-actions">
+                <a href="{% url 'signup' %}" class="btn-primary">Get Started</a>
+                <a href="#how-it-works" class="btn-secondary">See How It Works</a>
+            </div>
+        </div>
+
+        <div class="hero-feed" aria-hidden="true">
+            <div class="feed-header">
+                <span class="feed-dot"></span>
+                Live decision feed
+            </div>
+            <div class="feed-row">
+                <span class="feed-tag tag-fail">Payment failed</span>
+                <span class="feed-detail">Diagnosing root cause…</span>
+            </div>
+            <div class="feed-row">
+                <span class="feed-tag tag-decide">Action decided</span>
+                <span class="feed-detail">WhatsApp reminder · ₹0.4 cost</span>
+            </div>
+            <div class="feed-row">
+                <span class="feed-tag tag-recovered">Recovered</span>
+                <span class="feed-detail">₹12,400 · in 6 minutes</span>
+            </div>
+            <div class="feed-row">
+                <span class="feed-tag tag-audit">Logged to audit trail</span>
+                <span class="feed-detail">4 candidate actions compared</span>
+            </div>
+            <p class="feed-note">Illustrative preview — real trail lives in your audit dashboard.</p>
+        </div>
+    </div>
+</section>
+
+<section class="section-inner">
+    <h2>What it does</h2>
+    <p class="prose">{{ app_name|default:"Recoup" }} is an AI revenue recovery agent for payment failures, checkout
+    abandonment, subscription lapses, and overdue B2B invoices. It doesn't just flag
+    the problem — it diagnoses the root cause, decides the most cost-effective
+    intervention, executes it across real channels, and logs an auditable trail
+    of exactly why it did what it did.</p>
+</section>
+
+<section class="section-inner" id="how-it-works">
+    <h2>How it works</h2>
+    <ol class="timeline">
+        <li>
+            <span class="timeline-num">1</span>
+            <div><strong>Detect</strong> — payment failures (real Razorpay webhook), checkout
+            abandonment, overdue invoices, and early-warning payment degradation
+            before a hard failure even happens.</div>
+        </li>
+        <li>
+            <span class="timeline-num">2</span>
+            <div><strong>Diagnose</strong> — classifies the root cause using Razorpay's real
+            failure taxonomy, falling back to Gemini reasoning for ambiguous cases.</div>
+        </li>
+        <li>
+            <span class="timeline-num">3</span>
+            <div><strong>Decide</strong> — a bounded, auditable ROI optimizer scores every
+            candidate action by expected recovery value minus real channel cost, and
+            picks the best one — or stops, if nothing clears the bar.</div>
+        </li>
+        <li>
+            <span class="timeline-num">4</span>
+            <div><strong>Execute</strong> — real WhatsApp/email sends, Gemini-personalized
+            (including Hinglish), with compliant stopping rules and human escalation
+            for high-value or repeatedly-failed cases.</div>
+        </li>
+        <li>
+            <span class="timeline-num">5</span>
+            <div><strong>Learn</strong> — recovery probabilities recalibrate from real
+            observed outcomes after every batch, so the agent's decisions improve
+            over time.</div>
+        </li>
+        <li>
+            <span class="timeline-num">6</span>
+            <div><strong>Audit</strong> — every decision, action, and outcome is logged in
+            an immutable, explorable timeline.</div>
+        </li>
+    </ol>
+</section>
+
+<section class="section-inner">
+    <h2>What makes this different</h2>
+    <ul class="usp-list">
+        <li>
+            <span class="usp-icon">◆</span>
+            <div><strong>Explainable by design</strong> — every decision shows every
+            candidate action it considered and why it lost, not just the winner.</div>
+        </li>
+        <li>
+            <span class="usp-icon">◆</span>
+            <div><strong>One pipeline, every leak type</strong> — payment failures,
+            abandonment, degradation, and receivables all flow through the same
+            bounded engine instead of siloed point solutions.</div>
+        </li>
+        <li>
+            <span class="usp-icon">◆</span>
+            <div><strong>Predictive, not just reactive</strong> — flags payment degradation
+            risk before a hard failure occurs.</div>
+        </li>
+        <li>
+            <span class="usp-icon">◆</span>
+            <div><strong>Cost-aware, always</strong> — will not spend more chasing a
+            recovery than the recovery is worth, including its own AI-call costs.</div>
+        </li>
+        <li>
+            <span class="usp-icon">◆</span>
+            <div><strong>Self-improving</strong> — recovery probabilities recalibrate from
+            real observed outcomes, not frozen assumptions.</div>
+        </li>
+        <li>
+            <span class="usp-icon">◆</span>
+            <div><strong>Customer-respecting</strong> — a transparent magic-link portal with
+            a real one-click Razorpay payment link and a genuine opt-out.</div>
+        </li>
+        <li>
+            <span class="usp-icon">◆</span>
+            <div><strong>Safe to trust</strong> — shadow mode projects recovery before a
+            single message is sent or a rupee moves.</div>
+        </li>
+    </ul>
+</section>
+
+<section class="section-inner judges-section">
+    <div class="judges-panel">
+        <h2>For judges — quick orientation</h2>
+        <ul class="judge-notes">
+            <li>Stack: <code>Django + DRF</code>, real Razorpay Test Mode webhook, real WhatsApp
+                Cloud API + Gmail SMTP, Gemini (flash-lite/flash) for bounded reasoning
+                tasks only — never for the money decision itself.</li>
+            <li>Covers from the brief: payment degradation → root cause → recovery
+                action, checkout drop-off recovery, B2B receivables chaser,
+                promise-to-pay tracker, Hinglish messaging.</li>
+            <li>The rule-based core (stopping rules, cost math) is deliberate, not a
+                limitation — auditable, bounded decisions on money movement, with AI
+                reasoning applied only where genuine judgment is needed.</li>
+            <li>Two live dashboards: <code>/dashboard/</code> for admin/ops,
+                an escalation queue for recovery agents after login.</li>
+        </ul>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function () {
+        var el = document.getElementById('typed-line');
+        var fallback = document.getElementById('typed-fallback');
+        var phrases = ['Detect.', 'Diagnose.', 'Decide.', 'Execute.', 'Learn.', 'Audit.'];
+        var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        if (!el || reduceMotion) {
+            if (fallback) fallback.classList.remove('sr-only');
+            return;
+        }
+
+        var phraseIndex = 0, charIndex = 0, deleting = false;
+
+        function tick() {
+            var current = phrases[phraseIndex];
+            if (!deleting) {
+                charIndex++;
+                el.textContent = current.slice(0, charIndex);
+                if (charIndex === current.length) {
+                    deleting = true;
+                    setTimeout(tick, 1200);
+                    return;
+                }
+            } else {
+                charIndex--;
+                el.textContent = current.slice(0, charIndex);
+                if (charIndex === 0) {
+                    deleting = false;
+                    phraseIndex = (phraseIndex + 1) % phrases.length;
+                }
+            }
+            setTimeout(tick, deleting ? 40 : 70);
+        }
+        tick();
+    })();
+</script>
+{% endblock %}

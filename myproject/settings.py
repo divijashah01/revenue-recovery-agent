@@ -49,6 +49,8 @@ INSTALLED_APPS = [
     "apps.audit",
     "apps.portal",
     "apps.intelligence",
+    "apps.core",
+    "apps.accounts",
 ]
 
 MIDDLEWARE = [
@@ -147,3 +149,5 @@ GEMINI_FAST_MODEL = "gemini-3.5-flash-lite"
 GEMINI_REASONING_MODEL = "gemini-3.6-flash"
 
 SITE_BASE_URL = config("SITE_BASE_URL", default="http://127.0.0.1:8000")
+
+LOGIN_URL = "login"

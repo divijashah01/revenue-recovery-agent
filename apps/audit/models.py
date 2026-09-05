@@ -14,6 +14,7 @@ class AuditEvent(models.Model):
         ("action_attempted", "Action Attempted"),
         ("outcome_recorded", "Outcome Recorded"),
         ("customer_action", "Customer Action"),
+        ("agent_action", "Agent Action"),
     ]
 
     revenue_event = models.ForeignKey(RevenueEvent, on_delete=models.CASCADE, related_name="audit_trail")

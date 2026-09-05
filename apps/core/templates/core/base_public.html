@@ -1,0 +1,42 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ app_name|default:"Recoup" }}{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="{% static 'core/css/home.css' %}">
+</head>
+<body>
+    <nav class="navbar" id="navbar">
+        <a href="{% url 'home' %}" class="brand">
+            <span class="brand-mark"></span>
+            {{ app_name|default:"Recoup" }}
+        </a>
+        <div class="nav-links">
+            {% if user.is_authenticated %}
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'logout' %}">Log out</a>
+            {% else %}
+                <a href="{% url 'login' %}">Log in</a>
+                <a href="{% url 'signup' %}" class="btn-nav">Get started</a>
+            {% endif %}
+        </div>
+    </nav>
+    <main class="page">
+        {% block content %}{% endblock %}
+    </main>
+
+    <script>
+        // Glass navbar: add solid backing once the page scrolls
+        const nav = document.getElementById('navbar');
+        window.addEventListener('scroll', () => {
+            nav.classList.toggle('scrolled', window.scrollY > 12);
+        }, { passive: true });
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

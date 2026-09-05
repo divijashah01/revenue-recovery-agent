@@ -1,0 +1,17 @@
+{% extends "audit/base.html" %}
+{% block content %}
+<h1>Your Escalation Queue</h1>
+{% for case in cases %}
+    <div class="detail-card">
+        <p><strong>{{ case.event.customer.name }}</strong> — ₹{{ case.event.amount }} — {{ case.event.get_event_type_display }}</p>
+        <p><em>{{ case.brief }}</em></p>
+        <form method="post" action="{% url 'agent-resolve' case.event.id %}">
+            {% csrf_token %}
+            <button type="submit" class="btn-primary">Mark Resolved</button>
+        </form>
+        <a href="{% url 'event-detail' case.event.id %}">View full trail</a>
+    </div>
+{% empty %}
+    <p>No escalated cases right now.</p>
+{% endfor %}
+{% endblock %}

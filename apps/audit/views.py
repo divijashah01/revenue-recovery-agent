@@ -12,6 +12,10 @@ from django.shortcuts import render, get_object_or_404, redirect
 from apps.events.models import Customer
 from apps.events.services import process_event_immediately
 
+from django.contrib.auth.decorators import login_required
+from apps.accounts.decorators import admin_required, agent_required
+
+@admin_required
 def dashboard_view(request):
     events = RevenueEvent.objects.all()
 
@@ -60,6 +64,7 @@ def dashboard_view(request):
     return render(request, "audit/dashboard.html", context)
 
 
+@admin_required
 def batch_list_view(request):
     events = RevenueEvent.objects.select_related("customer", "diagnosis", "decision").order_by("-detected_at")
 
@@ -83,7 +88,7 @@ def batch_list_view(request):
     }
     return render(request, "audit/batch_list.html", context)
 
-
+@login_required
 def event_detail_view(request, event_id):
     event = get_object_or_404(
         RevenueEvent.objects.select_related("customer", "diagnosis", "decision"), pk=event_id
@@ -95,6 +100,7 @@ def event_detail_view(request, event_id):
     }
     return render(request, "audit/event_detail.html", context)
 
+@admin_required
 def shadow_mode_view(request):
     """
     Shows projected recovery for events that are diagnosed + decided but
@@ -127,6 +133,7 @@ def shadow_mode_view(request):
     }
     return render(request, "audit/shadow_mode.html", context)
 
+@admin_required
 def inject_live_event_view(request):
     if request.method == "POST":
         customer = Customer.objects.create(
@@ -149,3 +156,27 @@ def inject_live_event_view(request):
 
     context = {"event_type_choices": RevenueEvent.EVENT_TYPE_CHOICES}
     return render(request, "audit/inject_live_event.html", context)
+
+@agent_required
+def agent_queue_view(request):
+    events = RevenueEvent.objects.filter(status="escalated").select_related("customer", "diagnosis", "decision")
+
+    cases = []
+    for event in events:
+        brief_log = event.audit_trail.filter(stage="action_attempted").order_by("-created_at").first()
+        brief = brief_log.detail.get("brief", "") if brief_log else ""
+        cases.append({"event": event, "brief": brief})
+
+    return render(request, "audit/agent_queue.html", {"cases": cases})
+
+
+@agent_required
+def agent_resolve_view(request, event_id):
+    from apps.audit.services import log_audit
+    event = get_object_or_404(RevenueEvent, pk=event_id)
+    if request.method == "POST":
+        event.status = "recovered"
+        event.recovered_amount = event.amount
+        event.save(update_fields=["status", "recovered_amount", "updated_at"])
+        log_audit(event, "agent_action", {"resolved_by": request.user.username})
+    return redirect("agent-queue")

@@ -7,4 +7,6 @@ urlpatterns = [
     path("shadow/", views.shadow_mode_view, name="shadow-mode"),
     path("event/<int:event_id>/", views.event_detail_view, name="event-detail"),
     path("inject/", views.inject_live_event_view, name="inject-live-event"),
+    path("agent/queue/", views.agent_queue_view, name="agent-queue"),
+    path("agent/resolve/<int:event_id>/", views.agent_resolve_view, name="agent-resolve"),
 ]
