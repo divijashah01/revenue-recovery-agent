@@ -15,6 +15,10 @@ from apps.events.services import process_event_immediately
 from django.contrib.auth.decorators import login_required
 from apps.accounts.decorators import admin_required, agent_required
 
+from datetime import timedelta
+from django.utils import timezone
+from apps.events.models import Invoice
+
 @admin_required
 def dashboard_view(request):
     events = RevenueEvent.objects.all()
@@ -142,13 +146,27 @@ def inject_live_event_view(request):
             email=request.POST.get("email", "demo@example.com"),
             language_preference=request.POST.get("language_preference", "en"),
         )
+        event_type = request.POST.get("event_type", "payment_failure")
+        amount = request.POST.get("amount", 1000)
+
+        invoice = None
+        if event_type == "overdue_invoice":
+            invoice = Invoice.objects.create(
+                customer=customer,
+                invoice_number=f"INV-DEMO-{customer.id}",
+                amount=amount,
+                due_date=timezone.now().date() - timedelta(days=45),  # forces severely_overdue
+                status="overdue",
+            )
+
         event = RevenueEvent.objects.create(
-            event_type=request.POST.get("event_type", "payment_failure"),
+            event_type=event_type,
             customer=customer,
-            amount=request.POST.get("amount", 1000),
+            amount=amount,
             source="seed",
             error_code="BAD_REQUEST_ERROR",
             error_reason=request.POST.get("error_reason", "card_declined"),
+            invoice=invoice,
             raw_payload={"injected_live_demo": True},
         )
         process_event_immediately(event)

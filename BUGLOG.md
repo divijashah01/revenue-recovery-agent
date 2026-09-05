@@ -38,3 +38,14 @@
 - Fix: Fixed by renaming to `webhook_event_name` and
   `revenue_event` respectively so there's no ambiguity.
 - Time lost: ~25 min
+
+## Injected overdue invoices never escalated
+- What broke: Inject Live Event created an `overdue_invoice` RevenueEvent with
+  no linked Invoice record. Diagnosis reads `days_overdue` from
+  `revenue_event.invoice.due_date` — with no invoice, it silently defaulted
+  to 0 days, so every injected invoice was classified `recently_overdue`
+  regardless of amount, and never reached the `severely_overdue` root cause
+  that has an `escalate_human` rule attached.
+- Fix: Inject Live Event now creates a real Invoice (backdated 45 days) and
+  links it to the RevenueEvent before running the pipeline.
+- Time lost: ~15 min
