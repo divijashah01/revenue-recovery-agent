@@ -6,6 +6,8 @@ from .channels.sms_channel import send_sms_reminder
 from apps.intelligence.message_composer import compose_email
 from apps.intelligence.escalation_briefing import generate_escalation_brief
 from apps.portal.services import get_or_create_portal_link, portal_url
+from apps.intelligence.message_composer import compose_whatsapp_message
+from apps.execution.channels.whatsapp import send_whatsapp_personalized
 
 WHATSAPP_ACTIONS = {"whatsapp_nudge", "send_payment_link", "promise_to_pay"}
 EMAIL_ACTIONS = {"email_reminder"}
@@ -54,7 +56,10 @@ def execute_decision(revenue_event):
 
     if action in WHATSAPP_ACTIONS:
         template = TEMPLATE_MAP.get(action, "payment_reminder_nudge")
-        result = send_whatsapp_template(customer.phone, template, params=[customer.name, str(revenue_event.amount)])
+        ai_message = compose_whatsapp_message(customer, revenue_event, revenue_event.diagnosis)
+        result = send_whatsapp_personalized(
+            customer.phone, ai_message, template, [customer.name, str(revenue_event.amount)]
+        )
     elif action in EMAIL_ACTIONS:
         subject, body = compose_email(customer, revenue_event, revenue_event.diagnosis)
         link = get_or_create_portal_link(revenue_event)

@@ -32,3 +32,12 @@ def send_whatsapp_template(to_phone, template_name, params=None):
     except requests.RequestException as e:
         detail = e.response.json() if getattr(e, "response", None) is not None else str(e)
         return ChannelResult(success=False, detail=detail, cost=0.0)
+
+def send_whatsapp_personalized(to_phone, message_text, fallback_template, fallback_params):
+    """Tries the AI-personalized template first, falls back to the fixed
+    approved template if the new template isn't approved yet or fails."""
+    if message_text:
+        result = send_whatsapp_template(to_phone, "personalized_recovery_message", params=[message_text])
+        if result.success:
+            return result
+    return send_whatsapp_template(to_phone, fallback_template, params=fallback_params)

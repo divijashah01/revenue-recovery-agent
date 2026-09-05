@@ -6,6 +6,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework import status as http_status
 
 from .models import Customer, RevenueEvent
+from .services import process_event_immediately
 
 
 class RazorpayWebhookView(APIView):
@@ -53,5 +54,6 @@ class RazorpayWebhookView(APIView):
                 error_reason=payment_entity.get("error_reason", ""),
                 raw_payload=data,
             )
+            process_event_immediately(event)
 
         return Response({"status": "ok"}, status=http_status.HTTP_200_OK)

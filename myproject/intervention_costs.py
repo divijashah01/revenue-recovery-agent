@@ -19,3 +19,7 @@ EMAIL_COST = 0.0
 # Human agent follow-up (B2B receivables escalation) — modeled assumption,
 # not a market rate: ~4 min call at an assumed ₹300/hr agent cost.
 HUMAN_AGENT_CALL_COST = 20.0
+
+# Gemini API costs — approximate, India, Sept 2026, flash-lite/flash tiers (see README > Research Notes)
+GEMINI_FLASH_LITE_COST_PER_CALL = 0.02   # used for diagnosis reasoning, email/WhatsApp composition
+GEMINI_FLASH_COST_PER_CALL = 0.08        # used only for escalation briefs — lower volume, higher reasoning need

@@ -9,6 +9,9 @@ from django.core.management import call_command
 from django.contrib import messages as dj_messages
 from django.shortcuts import render, get_object_or_404, redirect
 
+from apps.events.models import Customer
+from apps.events.services import process_event_immediately
+
 def dashboard_view(request):
     events = RevenueEvent.objects.all()
 
@@ -123,3 +126,26 @@ def shadow_mode_view(request):
         "projected_rate": projected_rate,
     }
     return render(request, "audit/shadow_mode.html", context)
+
+def inject_live_event_view(request):
+    if request.method == "POST":
+        customer = Customer.objects.create(
+            name=request.POST.get("name", "Live Demo Customer"),
+            phone=request.POST.get("phone", "+919999999999"),
+            email=request.POST.get("email", "demo@example.com"),
+            language_preference=request.POST.get("language_preference", "en"),
+        )
+        event = RevenueEvent.objects.create(
+            event_type=request.POST.get("event_type", "payment_failure"),
+            customer=customer,
+            amount=request.POST.get("amount", 1000),
+            source="seed",
+            error_code="BAD_REQUEST_ERROR",
+            error_reason=request.POST.get("error_reason", "card_declined"),
+            raw_payload={"injected_live_demo": True},
+        )
+        process_event_immediately(event)
+        return redirect("event-detail", event_id=event.id)
+
+    context = {"event_type_choices": RevenueEvent.EVENT_TYPE_CHOICES}
+    return render(request, "audit/inject_live_event.html", context)

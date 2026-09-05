@@ -1,0 +1,22 @@
+{% extends "audit/base.html" %}
+{% block content %}
+<h1>Inject Live Event (Demo)</h1>
+<p class="event-meta">Creates one real event and runs it through the full pipeline immediately — diagnosis, decision, and a real send, right now.</p>
+<form method="post">
+    {% csrf_token %}
+    <p><label>Name: <input name="name" value="Demo Customer"></label></p>
+    <p><label>Phone: <input name="phone" value="+91XXXXXXXXXX"></label></p>
+    <p><label>Email: <input name="email" value="demo@example.com"></label></p>
+    <p><label>Amount: <input name="amount" value="2500" type="number"></label></p>
+    <p><label>Event type:
+        <select name="event_type">
+            {% for value, label in event_type_choices %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+        </select>
+    </label></p>
+    <p><label>Error reason: <input name="error_reason" value="card_declined"></label></p>
+    <p><label>Language:
+        <select name="language_preference"><option value="en">English</option><option value="hi-en">Hinglish</option></select>
+    </label></p>
+    <button type="submit" class="btn-primary">Run Live</button>
+</form>
+{% endblock %}
