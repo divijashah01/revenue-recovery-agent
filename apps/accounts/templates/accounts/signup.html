@@ -1,10 +1,189 @@
-{% extends "core/base_public.html" %}
-{% block content %}
-<h1>Sign Up</h1>
-<form method="post">
-    {% csrf_token %}
-    {{ form.as_p }}
-    <button type="submit">Create Account</button>
-</form>
-<p>Already have an account? <a href="{% url 'login' %}">Log in</a></p>
-{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sign Up — Recoup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+        --bg: #F7F9FC;
+        --surface: #FFFFFF;
+        --border: #E7ECF3;
+        --navy: #10182B;
+        --blue: #3395FF;
+        --blue-dark: #1F6FE0;
+        --blue-pale: #EAF3FF;
+        --red: #E2503A;
+        --text: #10182B;
+        --text-muted: #5C6B84;
+        --font-head: 'Plus Jakarta Sans', system-ui, sans-serif;
+        --font-body: 'Inter', system-ui, sans-serif;
+    }
+
+    body {
+        font-family: var(--font-body);
+        font-size: 16px;
+        color: var(--text);
+        line-height: 1.6;
+        min-height: 100vh;
+        background: radial-gradient(circle at 50% -10%, #EAF2FF 0%, var(--bg) 42%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px;
+    }
+
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+
+    .auth-wrap {
+        width: 100%;
+        max-width: 420px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .brand-link {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        font-family: var(--font-head);
+        font-weight: 800;
+        font-size: 1.15rem;
+        text-decoration: none;
+        color: var(--navy);
+        margin-bottom: 28px;
+    }
+    .brand-link svg { width: 24px; height: 24px; }
+
+    .auth-card {
+        width: 100%;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 40px 36px;
+        box-shadow: 0 16px 40px rgba(16,24,43,0.08);
+    }
+
+    .auth-card h1 {
+        font-family: var(--font-head);
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: var(--navy);
+        letter-spacing: -0.01em;
+        margin-bottom: 8px;
+    }
+
+    .auth-sub {
+        color: var(--text-muted);
+        font-size: 0.96rem;
+        margin-bottom: 28px;
+    }
+
+    .auth-form p {
+        margin-bottom: 18px;
+    }
+    .auth-form label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: var(--navy);
+        margin-bottom: 6px;
+    }
+    .auth-form input,
+    .auth-form select,
+    .auth-form textarea {
+        width: 100%;
+        font-family: var(--font-body);
+        font-size: 0.96rem;
+        color: var(--text);
+        background: var(--bg);
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        padding: 11px 14px;
+        transition: border-color 0.15s ease, box-shadow 0.15s ease;
+    }
+    .auth-form input:focus,
+    .auth-form select:focus,
+    .auth-form textarea:focus {
+        outline: none;
+        border-color: var(--blue);
+        box-shadow: 0 0 0 3px var(--blue-pale);
+    }
+    .auth-form ul.errorlist {
+        list-style: none;
+        color: var(--red);
+        font-size: 0.83rem;
+        font-weight: 600;
+        margin-bottom: 6px;
+    }
+    .auth-form .helptext {
+        display: block;
+        color: var(--text-muted);
+        font-size: 0.8rem;
+        margin-top: 4px;
+    }
+
+    .btn-primary {
+        background: var(--blue);
+        color: #fff;
+        border: none;
+        padding: 13px 28px;
+        border-radius: 12px;
+        font-family: var(--font-body);
+        font-weight: 700;
+        font-size: 0.98rem;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-block;
+        text-align: center;
+        transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+    .btn-block { width: 100%; margin-top: 6px; }
+
+    .auth-switch {
+        margin-top: 22px;
+        text-align: center;
+        color: var(--text-muted);
+        font-size: 0.92rem;
+    }
+    .auth-switch a {
+        color: var(--blue-dark);
+        font-weight: 600;
+        text-decoration: none;
+    }
+    .auth-switch a:hover { text-decoration: underline; }
+</style>
+</head>
+<body>
+    <div class="auth-wrap">
+        <a href="{% url 'home' %}" class="brand-link">
+            <svg viewBox="0 0 24 24" fill="none">
+                <path d="M4 12a8 8 0 1 1 2.5 5.8" stroke="url(#g)" stroke-width="2.4" stroke-linecap="round"/>
+                <path d="M4 12v5.5h5.5" stroke="url(#g)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs><linearGradient id="g" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#3395FF"/><stop offset="1" stop-color="#12A574"/></linearGradient></defs>
+            </svg>
+            Recoup
+        </a>
+
+        <div class="auth-card">
+            <h1>Sign Up</h1>
+            <p class="auth-sub">Start recovering revenue you'd otherwise lose.</p>
+            <form method="post" class="auth-form">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn-primary btn-block">Create Account</button>
+            </form>
+            <p class="auth-switch">Already have an account? <a href="{% url 'login' %}">Log in</a></p>
+        </div>
+    </div>
+</body>
+</html>

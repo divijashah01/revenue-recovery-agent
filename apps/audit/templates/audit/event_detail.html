@@ -1,53 +1,247 @@
-{% extends "audit/base.html" %}
-{% block title %}Event #{{ event.id }} - Audit Trail{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Event #{{ event.id }} - Audit Trail{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block content %}
-<a href="{% url 'batch-list' %}">&laquo; Back to batch</a>
-<h1>Event #{{ event.id }} — {{ event.customer.name }}</h1>
-<p class="event-meta">₹{{ event.amount }} · {{ event.get_event_type_display }} · <span class="badge badge-{{ event.status }}">{{ event.get_status_display }}</span></p>
+    :root {
+        --bg: #F7F9FC;
+        --bg-tint: #EFF4FB;
+        --surface: #FFFFFF;
+        --border: #E7ECF3;
+        --navy: #10182B;
+        --blue: #3395FF;
+        --blue-dark: #1F6FE0;
+        --blue-pale: #EAF3FF;
+        --green: #12A574;
+        --green-pale: #E7F8F1;
+        --red: #E2503A;
+        --red-pale: #FBEAE7;
+        --yellow: #F5C24B;
+        --yellow-pale: #FDF3DD;
+        --slate: #8592A8;
+        --slate-pale: #EDF0F5;
+        --text: #10182B;
+        --text-muted: #5C6B84;
+        --font-head: 'Plus Jakarta Sans', system-ui, sans-serif;
+        --font-body: 'Inter', system-ui, sans-serif;
+        --mono: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+    }
 
-{% if event.diagnosis %}
-<div class="detail-card">
-    <h3>Diagnosis</h3>
-    <p><strong>Root cause:</strong> {{ event.diagnosis.root_cause }}</p>
-    <p><strong>Explanation:</strong> {{ event.diagnosis.explanation }}</p>
-    <p><strong>Confidence:</strong> {{ event.diagnosis.confidence }}</p>
-</div>
-{% endif %}
+    html { scroll-behavior: smooth; }
 
-{% if event.decision %}
-<div class="detail-card">
-    <h3>Decision</h3>
-    <p><strong>Chosen action:</strong> {{ event.decision.chosen_action }}</p>
-    <p><strong>Reason:</strong> {{ event.decision.reason }}</p>
-    <p><strong>Expected value:</strong> ₹{{ event.decision.expected_value }}</p>
-    <details>
-        <summary>All candidates considered</summary>
-        <pre>{{ event.decision.candidates_considered }}</pre>
-    </details>
-</div>
-{% endif %}
+    body {
+        font-family: var(--font-body);
+        font-size: 16px;
+        background: radial-gradient(circle at 50% -10%, #EAF2FF 0%, var(--bg) 42%);
+        color: var(--text);
+        line-height: 1.65;
+        min-height: 100vh;
+    }
 
-<div class="detail-card">
-    <h3>Attempts</h3>
-    <table>
-        <thead><tr><th>Action</th><th>Outcome</th><th>Time</th></tr></thead>
-        <tbody>
-        {% for attempt in attempts %}
-            <tr><td>{{ attempt.action }}</td><td>{{ attempt.outcome }}</td><td>{{ attempt.attempted_at }}</td></tr>
-        {% empty %}
-            <tr><td colspan="3">No attempts yet.</td></tr>
-        {% endfor %}
-        </tbody>
-    </table>
-</div>
+    a { color: inherit; }
+    img, svg { display: block; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
 
-<div class="detail-card">
-    <h3>Full Audit Timeline</h3>
-    <ul class="timeline">
-        {% for a in audit_trail %}
-            <li><strong>{{ a.stage }}</strong> — {{ a.created_at }}<pre>{{ a.detail }}</pre></li>
-        {% endfor %}
-    </ul>
-</div>
-{% endblock %}
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+    }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 60px); }
+    h1, h2, h3 { font-family: var(--font-head); letter-spacing: -0.01em; }
+
+    /* ---------- App navbar ---------- */
+    .navbar {
+        position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+        width: min(1180px, calc(100% - 32px));
+        z-index: 100;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px 22px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(16px) saturate(160%);
+        -webkit-backdrop-filter: blur(16px) saturate(160%);
+        border: 1px solid rgba(16,24,43,0.07);
+        box-shadow: 0 10px 30px rgba(16,24,43,0.1);
+    }
+    .navbar .brand { display: flex; align-items: center; gap: 9px; font-family: var(--font-head); font-weight: 800; font-size: 1.1rem; text-decoration: none; color: var(--text); }
+    .nav-links { display: flex; align-items: center; gap: 22px; }
+    .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 0.93rem; font-weight: 500; transition: color 0.15s ease; padding: 6px 2px; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--blue-dark); font-weight: 700; }
+    .nav-links .divider { width: 1px; height: 18px; background: var(--border); }
+    .btn-logout { color: var(--text-muted); font-size: 0.93rem; font-weight: 500; padding: 8px 14px; border-radius: 9px; transition: background 0.15s ease, color 0.15s ease; }
+    .btn-logout:hover { background: var(--red-pale); color: var(--red); }
+
+    @media (max-width: 860px) { .nav-links a:not(.btn-logout):not(.active) { display: none; } }
+
+    /* ---------- Flash messages ---------- */
+    .flash-wrap { padding: 130px 0 0; }
+    .flash { background: var(--blue-pale); border: 1px solid rgba(51,149,255,0.25); color: var(--blue-dark); font-size: 0.94rem; font-weight: 500; padding: 12px 18px; border-radius: 12px; margin-bottom: 12px; }
+
+    /* ---------- Page header ---------- */
+    .page-header { padding: 130px 0 20px; }
+    .page-header.tight { padding-top: 20px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); text-decoration: none; font-size: 0.92rem; font-weight: 600; margin-bottom: 18px; }
+    .back-link:hover { color: var(--blue-dark); }
+    .page-header h1 { font-size: clamp(1.6rem, 3vw, 2.15rem); margin-bottom: 14px; font-weight: 800; color: var(--navy); word-break: break-word; }
+
+    .event-meta-row { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+    .meta-chip { background: var(--bg-tint); border: 1px solid var(--border); color: var(--text-muted); font-size: 0.88rem; font-weight: 600; padding: 5px 12px; border-radius: 999px; }
+    .badge { display: inline-block; font-size: 0.78rem; font-weight: 700; padding: 5px 12px; border-radius: 999px; white-space: nowrap; }
+    .badge-detected, .badge-pending { background: var(--slate-pale); color: var(--slate); }
+    .badge-attempted { background: var(--yellow-pale); color: #B8842A; }
+    .badge-recovered { background: var(--green-pale); color: var(--green); }
+    .badge-escalated { background: var(--red-pale); color: var(--red); }
+    .badge-stopped, .badge-failed { background: var(--bg-tint); color: var(--text-muted); }
+
+    .section { padding: 24px 0 100px; }
+
+    /* ---------- Detail cards ---------- */
+    .detail-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 26px; margin-bottom: 20px; }
+    .detail-card h3 { font-size: 1.02rem; color: var(--navy); margin-bottom: 16px; }
+    .detail-card p { font-size: 0.95rem; color: var(--text); margin-bottom: 8px; }
+    .detail-card p:last-child { margin-bottom: 0; }
+    .detail-card p strong { color: var(--navy); font-weight: 700; margin-right: 4px; }
+
+    details { margin-top: 14px; }
+    details summary { cursor: pointer; font-size: 0.9rem; font-weight: 600; color: var(--blue-dark); list-style: none; display: flex; align-items: center; gap: 6px; }
+    details summary::-webkit-details-marker { display: none; }
+    details summary::before { content: '▸'; font-size: 0.75rem; transition: transform 0.15s ease; }
+    details[open] summary::before { transform: rotate(90deg); }
+
+    pre {
+        font-family: var(--mono); font-size: 0.82rem; color: var(--text-muted);
+        background: var(--bg-tint); border: 1px solid var(--border); border-radius: 10px;
+        padding: 14px 16px; margin-top: 10px; overflow-x: auto; white-space: pre-wrap; word-break: break-word;
+    }
+
+    /* ---------- Attempts table ---------- */
+    table { width: 100%; border-collapse: collapse; font-size: 0.93rem; }
+    thead th { text-align: left; color: var(--text-muted); font-weight: 600; padding: 0 8px 10px 0; border-bottom: 1px solid var(--border); }
+    tbody td { padding: 12px 8px 12px 0; border-bottom: 1px solid var(--border); color: var(--text); }
+    tbody tr:last-child td { border-bottom: none; }
+
+    /* ---------- Timeline ---------- */
+    .timeline { list-style: none; position: relative; padding-left: 22px; }
+    .timeline::before { content: ''; position: absolute; left: 5px; top: 6px; bottom: 6px; width: 2px; background: var(--border); }
+    .timeline li { position: relative; padding-bottom: 22px; }
+    .timeline li:last-child { padding-bottom: 0; }
+    .timeline li::before { content: ''; position: absolute; left: -22px; top: 4px; width: 10px; height: 10px; border-radius: 50%; background: var(--blue); border: 2px solid var(--surface); box-shadow: 0 0 0 2px var(--blue-pale); }
+    .timeline li strong { color: var(--navy); font-family: var(--font-head); font-weight: 700; font-size: 0.95rem; }
+    .timeline li .ts { color: var(--text-muted); font-size: 0.86rem; margin-left: 6px; }
+
+    /* ---------- Minimal app footer ---------- */
+    .footer { padding: 26px 0 40px; }
+    .footer-row { display: flex; justify-content: center; align-items: center; }
+    .footer-row span { color: #A6B0C3; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{% if user.profile.role == "agent" %}{% url 'agent-queue' %}{% else %}{% url 'dashboard' %}{% endif %}" class="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M4 12a8 8 0 1 1 2.5 5.8" stroke="url(#g)" stroke-width="2.4" stroke-linecap="round"/>
+                <path d="M4 12v5.5h5.5" stroke="url(#g)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs><linearGradient id="g" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#3395FF"/><stop offset="1" stop-color="#12A574"/></linearGradient></defs>
+            </svg>
+            Recoup
+        </a>
+        <div class="nav-links">
+            {% if user.profile.role == "agent" %}
+                <a href="{% url 'agent-queue' %}">My Queue</a>
+            {% else %}
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'batch-list' %}">Batch</a>
+                <a href="{% url 'shadow-mode' %}">Shadow Mode</a>
+                <a href="{% url 'inject-live-event' %}">Inject Live</a>
+                <a href="/admin/">Admin</a>
+            {% endif %}
+            <span class="divider"></span>
+            <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+        </div>
+    </nav>
+
+    <main>
+        {% if messages %}
+            <div class="container flash-wrap">
+                {% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+            </div>
+        {% endif %}
+
+        <section class="page-header{% if messages %} tight{% endif %}">
+            <div class="container">
+                <a href="{% url 'batch-list' %}" class="back-link">&laquo; Back to batch</a>
+                <h1>Event #{{ event.id }} — {{ event.customer.name }}</h1>
+                <div class="event-meta-row">
+                    <span class="meta-chip">₹{{ event.amount }}</span>
+                    <span class="meta-chip">{{ event.get_event_type_display }}</span>
+                    <span class="badge badge-{{ event.status }}">{{ event.get_status_display }}</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                {% if event.diagnosis %}
+                <div class="detail-card">
+                    <h3>Diagnosis</h3>
+                    <p><strong>Root cause:</strong> {{ event.diagnosis.root_cause }}</p>
+                    <p><strong>Explanation:</strong> {{ event.diagnosis.explanation }}</p>
+                    <p><strong>Confidence:</strong> {{ event.diagnosis.confidence }}</p>
+                </div>
+                {% endif %}
+
+                {% if event.decision %}
+                <div class="detail-card">
+                    <h3>Decision</h3>
+                    <p><strong>Chosen action:</strong> {{ event.decision.chosen_action }}</p>
+                    <p><strong>Reason:</strong> {{ event.decision.reason }}</p>
+                    <p><strong>Expected value:</strong> ₹{{ event.decision.expected_value }}</p>
+                    <details>
+                        <summary>All candidates considered</summary>
+                        <pre>{{ event.decision.candidates_considered }}</pre>
+                    </details>
+                </div>
+                {% endif %}
+
+                <div class="detail-card">
+                    <h3>Attempts</h3>
+                    <table>
+                        <thead><tr><th>Action</th><th>Outcome</th><th>Time</th></tr></thead>
+                        <tbody>
+                        {% for attempt in attempts %}
+                            <tr><td>{{ attempt.action }}</td><td>{{ attempt.outcome }}</td><td>{{ attempt.attempted_at }}</td></tr>
+                        {% empty %}
+                            <tr><td colspan="3">No attempts yet.</td></tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="detail-card">
+                    <h3>Full Audit Timeline</h3>
+                    <ul class="timeline">
+                        {% for a in audit_trail %}
+                            <li><strong>{{ a.stage }}</strong><span class="ts">{{ a.created_at }}</span><pre>{{ a.detail }}</pre></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="container footer-row">
+                <span>© Recoup — automatic revenue recovery</span>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

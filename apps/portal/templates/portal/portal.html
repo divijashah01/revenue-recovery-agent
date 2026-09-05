@@ -2,10 +2,155 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Payment Update</title>
-    <link rel="stylesheet" href="{% static 'portal/css/portal.css' %}">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Payment Update — Recoup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+        --bg: #F7F9FC;
+        --surface: #FFFFFF;
+        --border: #E7ECF3;
+        --navy: #10182B;
+        --blue: #3395FF;
+        --blue-dark: #1F6FE0;
+        --blue-pale: #EAF3FF;
+        --green: #12A574;
+        --green-pale: #E7F8F1;
+        --red: #E2503A;
+        --yellow-pale: #FDF3DD;
+        --text: #10182B;
+        --text-muted: #5C6B84;
+        --font-head: 'Plus Jakarta Sans', system-ui, sans-serif;
+        --font-body: 'Inter', system-ui, sans-serif;
+    }
+
+    body {
+        font-family: var(--font-body);
+        font-size: 16px;
+        color: var(--text);
+        line-height: 1.6;
+        min-height: 100vh;
+        background: radial-gradient(circle at 50% -10%, #EAF2FF 0%, var(--bg) 42%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 20px;
+    }
+
+    a { color: inherit; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+
+    .flash {
+        width: 100%;
+        max-width: 440px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-left: 4px solid var(--blue);
+        border-radius: 10px;
+        padding: 12px 16px;
+        font-size: 0.9rem;
+        color: var(--navy);
+        margin-bottom: 12px;
+    }
+
+    .card {
+        width: 100%;
+        max-width: 440px;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: 40px 36px;
+        box-shadow: 0 16px 40px rgba(16,24,43,0.08);
+        text-align: center;
+    }
+
+    .card h1 {
+        font-family: var(--font-head);
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: var(--navy);
+        letter-spacing: -0.01em;
+        margin-bottom: 18px;
+    }
+
+    .status-line {
+        font-size: 1rem;
+        font-weight: 600;
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin-bottom: 8px;
+    }
+    .status-line.success {
+        color: var(--green);
+        background: var(--green-pale);
+    }
+    .status-line.muted {
+        color: var(--text-muted);
+        background: var(--bg);
+    }
+
+    .reason {
+        color: var(--text-muted);
+        font-size: 0.98rem;
+        margin-bottom: 18px;
+    }
+
+    .amount {
+        font-family: var(--font-head);
+        font-size: 1.8rem;
+        font-weight: 800;
+        color: var(--navy);
+        margin-bottom: 28px;
+    }
+
+    .btn-primary {
+        display: inline-block;
+        background: var(--blue);
+        color: #fff;
+        text-decoration: none;
+        padding: 14px 28px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+
+    .muted {
+        color: var(--text-muted);
+        font-size: 0.95rem;
+    }
+
+    .opt-out-form {
+        margin-top: 28px;
+    }
+
+    .btn-secondary {
+        background: none;
+        border: 1px solid var(--border);
+        color: var(--navy);
+        padding: 11px 22px;
+        border-radius: 10px;
+        font-weight: 600;
+        font-size: 0.92rem;
+        cursor: pointer;
+        font-family: var(--font-body);
+        transition: border-color 0.15s ease, color 0.15s ease;
+    }
+    .btn-secondary:hover { border-color: var(--blue); color: var(--blue-dark); }
+
+    .fine-print {
+        margin-top: 14px;
+        color: #A6B0C3;
+        font-size: 0.78rem;
+    }
+</style>
 </head>
 <body>
     {% if messages %}
@@ -21,7 +166,7 @@
             <p class="status-line muted">You've opted out of reminders for this. No further action needed.</p>
         {% else %}
             <p class="reason">{{ reason_text }}</p>
-            <p class="amount">Amount: ₹{{ event.amount }}</p>
+            <p class="amount">₹{{ event.amount }}</p>
 
             {% if payment_link_url %}
                 <a href="{{ payment_link_url }}" class="btn-primary" target="_blank">Complete Payment</a>

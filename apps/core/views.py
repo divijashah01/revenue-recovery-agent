@@ -1,6 +1,6 @@
 from django.shortcuts import render
 
-APP_NAME = "Vasooli"  # placeholder — rename freely, used everywhere via context
+APP_NAME = "Recoup"
 
 
 def home_view(request):

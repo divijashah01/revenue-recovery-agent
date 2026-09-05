@@ -1,17 +1,219 @@
-{% extends "audit/base.html" %}
-{% block content %}
-<h1>Your Escalation Queue</h1>
-{% for case in cases %}
-    <div class="detail-card">
-        <p><strong>{{ case.event.customer.name }}</strong> — ₹{{ case.event.amount }} — {{ case.event.get_event_type_display }}</p>
-        <p><em>{{ case.brief }}</em></p>
-        <form method="post" action="{% url 'agent-resolve' case.event.id %}">
-            {% csrf_token %}
-            <button type="submit" class="btn-primary">Mark Resolved</button>
-        </form>
-        <a href="{% url 'event-detail' case.event.id %}">View full trail</a>
-    </div>
-{% empty %}
-    <p>No escalated cases right now.</p>
-{% endfor %}
-{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}My Queue — Recoup{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+        --bg: #F7F9FC;
+        --bg-tint: #EFF4FB;
+        --surface: #FFFFFF;
+        --border: #E7ECF3;
+        --navy: #10182B;
+        --blue: #3395FF;
+        --blue-dark: #1F6FE0;
+        --blue-pale: #EAF3FF;
+        --green: #12A574;
+        --green-pale: #E7F8F1;
+        --red: #E2503A;
+        --red-pale: #FBEAE7;
+        --yellow: #F5C24B;
+        --yellow-pale: #FDF3DD;
+        --slate: #8592A8;
+        --slate-pale: #EDF0F5;
+        --text: #10182B;
+        --text-muted: #5C6B84;
+        --font-head: 'Plus Jakarta Sans', system-ui, sans-serif;
+        --font-body: 'Inter', system-ui, sans-serif;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+        font-family: var(--font-body);
+        font-size: 16px;
+        background: radial-gradient(circle at 50% -10%, #EAF2FF 0%, var(--bg) 42%);
+        color: var(--text);
+        line-height: 1.65;
+        min-height: 100vh;
+    }
+
+    a { color: inherit; }
+    img, svg { display: block; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+    button { font-family: inherit; cursor: pointer; border: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+    }
+
+    .container { max-width: 900px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 60px); }
+    h1, h2, h3 { font-family: var(--font-head); letter-spacing: -0.01em; }
+
+    /* ---------- App navbar ---------- */
+    .navbar {
+        position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+        width: min(1180px, calc(100% - 32px));
+        z-index: 100;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px 22px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(16px) saturate(160%);
+        -webkit-backdrop-filter: blur(16px) saturate(160%);
+        border: 1px solid rgba(16,24,43,0.07);
+        box-shadow: 0 10px 30px rgba(16,24,43,0.1);
+    }
+    .navbar .brand { display: flex; align-items: center; gap: 9px; font-family: var(--font-head); font-weight: 800; font-size: 1.1rem; text-decoration: none; color: var(--text); }
+    .nav-links { display: flex; align-items: center; gap: 22px; }
+    .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 0.93rem; font-weight: 500; transition: color 0.15s ease; padding: 6px 2px; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--blue-dark); font-weight: 700; }
+    .nav-links .divider { width: 1px; height: 18px; background: var(--border); }
+    .btn-logout { color: var(--text-muted); font-size: 0.93rem; font-weight: 500; padding: 8px 14px; border-radius: 9px; transition: background 0.15s ease, color 0.15s ease; }
+    .btn-logout:hover { background: var(--red-pale); color: var(--red); }
+
+    @media (max-width: 860px) { .nav-links a:not(.btn-logout):not(.active) { display: none; } }
+
+    /* ---------- Flash messages ---------- */
+    .flash-wrap { padding: 130px 0 0; }
+    .flash { background: var(--blue-pale); border: 1px solid rgba(51,149,255,0.25); color: var(--blue-dark); font-size: 0.94rem; font-weight: 500; padding: 12px 18px; border-radius: 12px; margin-bottom: 12px; }
+
+    /* ---------- Page header ---------- */
+    .page-header { padding: 130px 0 20px; }
+    .page-header.tight { padding-top: 20px; }
+    .section-eyebrow { color: var(--blue-dark); font-weight: 700; font-size: 0.88rem; }
+    .page-header h1 { font-size: clamp(1.9rem, 3.4vw, 2.5rem); margin: 12px 0 10px; font-weight: 800; color: var(--navy); }
+    .page-header p { color: var(--text-muted); font-size: 1.02rem; max-width: 60ch; }
+
+    .section { padding: 24px 0 100px; }
+
+    /* ---------- Case cards ---------- */
+    .case-list { display: flex; flex-direction: column; gap: 18px; }
+    .detail-card {
+        background: var(--surface); border: 1px solid var(--border); border-left: 4px solid var(--yellow);
+        border-radius: 16px; padding: 24px 26px;
+    }
+    .case-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 12px; }
+    .case-who { font-family: var(--font-head); font-weight: 700; font-size: 1.08rem; color: var(--navy); }
+    .case-meta { color: var(--text-muted); font-size: 0.92rem; margin-top: 3px; }
+    .case-amount { font-family: var(--font-head); font-weight: 800; font-size: 1.25rem; color: var(--navy); white-space: nowrap; }
+
+    .case-brief {
+        background: var(--bg-tint); border-radius: 12px; padding: 14px 16px;
+        color: var(--text-muted); font-size: 0.95rem; font-style: italic;
+        border-left: 3px solid var(--blue); margin-bottom: 18px;
+    }
+
+    .case-actions { display: flex; align-items: center; gap: 20px; flex-wrap: wrap; }
+    .case-actions form { margin: 0; }
+    .btn-primary { background: var(--blue); color: #fff; padding: 11px 20px; border-radius: 10px; font-weight: 700; font-size: 0.92rem; transition: background 0.15s ease, transform 0.15s ease; }
+    .btn-primary:hover { background: var(--blue-dark); transform: translateY(-1px); }
+    .link-trail { color: var(--blue-dark); text-decoration: none; font-weight: 600; font-size: 0.92rem; border-bottom: 2px solid transparent; transition: border-color 0.15s ease; }
+    .link-trail:hover { border-color: var(--blue-dark); }
+
+    /* ---------- Empty state ---------- */
+    .empty-state {
+        background: var(--surface); border: 1px dashed var(--border); border-radius: 18px;
+        padding: 52px 30px; text-align: center;
+    }
+    .empty-state .icon-badge { background: var(--green-pale); margin: 0 auto 18px; }
+    .empty-state .icon-badge svg { stroke: var(--green); }
+    .empty-state h3 { color: var(--navy); font-size: 1.15rem; margin-bottom: 8px; }
+    .empty-state p { color: var(--text-muted); font-size: 0.96rem; }
+    .icon-badge { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; }
+    .icon-badge svg { width: 22px; height: 22px; }
+
+    /* ---------- Minimal app footer ---------- */
+    .footer { padding: 26px 0 40px; }
+    .footer-row { display: flex; justify-content: center; align-items: center; }
+    .footer-row span { color: #A6B0C3; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{% if user.profile.role == "agent" %}{% url 'agent-queue' %}{% else %}{% url 'dashboard' %}{% endif %}" class="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M4 12a8 8 0 1 1 2.5 5.8" stroke="url(#g)" stroke-width="2.4" stroke-linecap="round"/>
+                <path d="M4 12v5.5h5.5" stroke="url(#g)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs><linearGradient id="g" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#3395FF"/><stop offset="1" stop-color="#12A574"/></linearGradient></defs>
+            </svg>
+            Recoup
+        </a>
+        <div class="nav-links">
+            {% if user.profile.role == "agent" %}
+                <a href="{% url 'agent-queue' %}" class="active">My Queue</a>
+            {% else %}
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'batch-list' %}">Batch</a>
+                <a href="{% url 'shadow-mode' %}">Shadow Mode</a>
+                <a href="{% url 'inject-live-event' %}">Inject Live</a>
+                <a href="/admin/">Admin</a>
+            {% endif %}
+            <span class="divider"></span>
+            <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+        </div>
+    </nav>
+
+    <main>
+        {% if messages %}
+            <div class="container flash-wrap">
+                {% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+            </div>
+        {% endif %}
+
+        <section class="page-header{% if messages %} tight{% endif %}">
+            <div class="container">
+                <span class="section-eyebrow">Needs a human</span>
+                <h1>Your Escalation Queue</h1>
+                <p>Recoup decided these cases were worth a real person's judgment — high value, repeated failures, or something it wasn't confident enough to run on its own.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <div class="case-list">
+                    {% for case in cases %}
+                        <div class="detail-card">
+                            <div class="case-top">
+                                <div>
+                                    <div class="case-who">{{ case.event.customer.name }}</div>
+                                    <div class="case-meta">{{ case.event.get_event_type_display }}</div>
+                                </div>
+                                <div class="case-amount">₹{{ case.event.amount }}</div>
+                            </div>
+                            <p class="case-brief">{{ case.brief }}</p>
+                            <div class="case-actions">
+                                <form method="post" action="{% url 'agent-resolve' case.event.id %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn-primary">Mark Resolved</button>
+                                </form>
+                                <a href="{% url 'event-detail' case.event.id %}" class="link-trail">View full trail →</a>
+                            </div>
+                        </div>
+                    {% empty %}
+                        <div class="empty-state">
+                            <div class="icon-badge"><svg viewBox="0 0 24 24" fill="none"><path d="M20 6 9 17l-5-5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+                            <h3>No escalated cases right now</h3>
+                            <p>You're all caught up — Recoup is handling the rest on its own.</p>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="container footer-row">
+                <span>© Recoup — automatic revenue recovery</span>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>

@@ -1,46 +1,241 @@
-{% extends "audit/base.html" %}
-{% block title %}Batch - Revenue Recovery Agent{% endblock %}
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}Batch - Revenue Recovery Agent{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
 
-{% block content %}
-<h1>Event Batch</h1>
+    :root {
+        --bg: #F7F9FC;
+        --bg-tint: #EFF4FB;
+        --surface: #FFFFFF;
+        --border: #E7ECF3;
+        --navy: #10182B;
+        --blue: #3395FF;
+        --blue-dark: #1F6FE0;
+        --blue-pale: #EAF3FF;
+        --green: #12A574;
+        --green-pale: #E7F8F1;
+        --red: #E2503A;
+        --red-pale: #FBEAE7;
+        --yellow: #F5C24B;
+        --yellow-pale: #FDF3DD;
+        --slate: #8592A8;
+        --slate-pale: #EDF0F5;
+        --text: #10182B;
+        --text-muted: #5C6B84;
+        --font-head: 'Plus Jakarta Sans', system-ui, sans-serif;
+        --font-body: 'Inter', system-ui, sans-serif;
+    }
 
-<form method="get" class="filters">
-    <select name="event_type">
-        <option value="">All types</option>
-        {% for value, label in event_type_choices %}
-            <option value="{{ value }}" {% if value == selected_event_type %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-    </select>
-    <select name="status">
-        <option value="">All statuses</option>
-        {% for value, label in status_choices %}
-            <option value="{{ value }}" {% if value == selected_status %}selected{% endif %}>{{ label }}</option>
-        {% endfor %}
-    </select>
-    <button type="submit">Filter</button>
-</form>
+    html { scroll-behavior: smooth; }
 
-<table class="batch-table">
-    <thead>
-        <tr><th>Customer</th><th>Type</th><th>Amount</th><th>Status</th><th>Action</th><th></th></tr>
-    </thead>
-    <tbody>
-    {% for event in page_obj %}
-        <tr>
-            <td>{{ event.customer.name }}</td>
-            <td>{{ event.get_event_type_display }}</td>
-            <td>₹{{ event.amount }}</td>
-            <td><span class="badge badge-{{ event.status }}">{{ event.get_status_display }}</span></td>
-            <td>{{ event.decision.chosen_action|default:"—" }}</td>
-            <td><a href="{% url 'event-detail' event.id %}">View trail</a></td>
-        </tr>
-    {% endfor %}
-    </tbody>
-</table>
+    body {
+        font-family: var(--font-body);
+        font-size: 16px;
+        background: radial-gradient(circle at 50% -10%, #EAF2FF 0%, var(--bg) 42%);
+        color: var(--text);
+        line-height: 1.65;
+        min-height: 100vh;
+    }
 
-<div class="pagination">
-    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">&laquo; Prev</a>{% endif %}
-    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
-    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>{% endif %}
-</div>
-{% endblock %}
+    a { color: inherit; }
+    img, svg { display: block; }
+    :focus-visible { outline: 2px solid var(--blue); outline-offset: 3px; }
+    button { font-family: inherit; cursor: pointer; border: none; }
+
+    @media (prefers-reduced-motion: reduce) {
+        *, *::before, *::after { animation-duration: 0.001ms !important; transition-duration: 0.001ms !important; }
+    }
+
+    .container { max-width: 1180px; margin: 0 auto; padding: 0 clamp(20px, 4vw, 60px); }
+    h1, h2, h3 { font-family: var(--font-head); letter-spacing: -0.01em; }
+
+    /* ---------- App navbar ---------- */
+    .navbar {
+        position: fixed; top: 16px; left: 50%; transform: translateX(-50%);
+        width: min(1180px, calc(100% - 32px));
+        z-index: 100;
+        display: flex; justify-content: space-between; align-items: center;
+        padding: 12px 22px;
+        border-radius: 18px;
+        background: rgba(255,255,255,0.92);
+        backdrop-filter: blur(16px) saturate(160%);
+        -webkit-backdrop-filter: blur(16px) saturate(160%);
+        border: 1px solid rgba(16,24,43,0.07);
+        box-shadow: 0 10px 30px rgba(16,24,43,0.1);
+    }
+    .navbar .brand { display: flex; align-items: center; gap: 9px; font-family: var(--font-head); font-weight: 800; font-size: 1.1rem; text-decoration: none; color: var(--text); }
+    .nav-links { display: flex; align-items: center; gap: 22px; }
+    .nav-links a { text-decoration: none; color: var(--text-muted); font-size: 0.93rem; font-weight: 500; transition: color 0.15s ease; padding: 6px 2px; }
+    .nav-links a:hover { color: var(--text); }
+    .nav-links a.active { color: var(--blue-dark); font-weight: 700; }
+    .nav-links .divider { width: 1px; height: 18px; background: var(--border); }
+    .btn-logout { color: var(--text-muted); font-size: 0.93rem; font-weight: 500; padding: 8px 14px; border-radius: 9px; transition: background 0.15s ease, color 0.15s ease; }
+    .btn-logout:hover { background: var(--red-pale); color: var(--red); }
+
+    @media (max-width: 860px) { .nav-links a:not(.btn-logout):not(.active) { display: none; } }
+
+    /* ---------- Flash messages ---------- */
+    .flash-wrap { padding: 130px 0 0; }
+    .flash { background: var(--blue-pale); border: 1px solid rgba(51,149,255,0.25); color: var(--blue-dark); font-size: 0.94rem; font-weight: 500; padding: 12px 18px; border-radius: 12px; margin-bottom: 12px; }
+
+    /* ---------- Page header ---------- */
+    .page-header { padding: 130px 0 20px; }
+    .page-header.tight { padding-top: 20px; }
+    .section-eyebrow { color: var(--blue-dark); font-weight: 700; font-size: 0.88rem; }
+    .page-header h1 { font-size: clamp(1.9rem, 3.4vw, 2.5rem); margin: 12px 0 10px; font-weight: 800; color: var(--navy); }
+    .page-header p { color: var(--text-muted); font-size: 1.02rem; max-width: 60ch; }
+
+    .section { padding: 24px 0 100px; }
+
+    /* ---------- Filters ---------- */
+    .filters {
+        display: flex; gap: 12px; flex-wrap: wrap; align-items: center;
+        background: var(--surface); border: 1px solid var(--border); border-radius: 16px;
+        padding: 16px 18px; margin-bottom: 24px;
+    }
+    .filters select {
+        font-family: var(--font-body); font-size: 0.92rem; color: var(--text);
+        background: var(--bg-tint); border: 1px solid var(--border); border-radius: 10px;
+        padding: 10px 14px; min-width: 160px; cursor: pointer;
+    }
+    .filters select:focus-visible { outline: 2px solid var(--blue); outline-offset: 1px; }
+    .filters button {
+        background: var(--blue); color: #fff; font-weight: 700; font-size: 0.92rem;
+        padding: 10px 20px; border-radius: 10px; transition: background 0.15s ease, transform 0.15s ease;
+    }
+    .filters button:hover { background: var(--blue-dark); transform: translateY(-1px); }
+
+    /* ---------- Table ---------- */
+    .table-card { background: var(--surface); border: 1px solid var(--border); border-radius: 18px; padding: 8px 26px 20px; overflow-x: auto; }
+    table.batch-table { width: 100%; border-collapse: collapse; font-size: 0.94rem; min-width: 640px; }
+    .batch-table thead th { text-align: left; color: var(--text-muted); font-weight: 600; padding: 16px 10px 12px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+    .batch-table tbody td { padding: 14px 10px; border-bottom: 1px solid var(--border); color: var(--text); }
+    .batch-table tbody tr:last-child td { border-bottom: none; }
+    .batch-table tbody tr:hover { background: var(--bg-tint); }
+    .batch-table thead th:last-child, .batch-table tbody td:last-child { text-align: right; }
+
+    .batch-table a { color: var(--blue-dark); text-decoration: none; font-weight: 600; font-size: 0.9rem; border-bottom: 2px solid transparent; }
+    .batch-table a:hover { border-color: var(--blue-dark); }
+
+    /* ---------- Status badges ---------- */
+    .badge { display: inline-block; font-size: 0.78rem; font-weight: 700; padding: 4px 11px; border-radius: 999px; white-space: nowrap; }
+    .badge-detected, .badge-pending { background: var(--slate-pale); color: var(--slate); }
+    .badge-attempted { background: var(--yellow-pale); color: #B8842A; }
+    .badge-recovered { background: var(--green-pale); color: var(--green); }
+    .badge-escalated { background: var(--red-pale); color: var(--red); }
+    .badge-stopped, .badge-failed { background: var(--bg-tint); color: var(--text-muted); }
+
+    /* ---------- Pagination ---------- */
+    .pagination { display: flex; justify-content: center; align-items: center; gap: 18px; margin-top: 26px; }
+    .pagination a { color: var(--blue-dark); text-decoration: none; font-weight: 700; font-size: 0.92rem; }
+    .pagination a:hover { text-decoration: underline; }
+    .pagination span { color: var(--text-muted); font-size: 0.92rem; }
+
+    /* ---------- Minimal app footer ---------- */
+    .footer { padding: 26px 0 40px; }
+    .footer-row { display: flex; justify-content: center; align-items: center; }
+    .footer-row span { color: #A6B0C3; font-size: 0.85rem; }
+</style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="{% if user.profile.role == "agent" %}{% url 'agent-queue' %}{% else %}{% url 'dashboard' %}{% endif %}" class="brand">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                <path d="M4 12a8 8 0 1 1 2.5 5.8" stroke="url(#g)" stroke-width="2.4" stroke-linecap="round"/>
+                <path d="M4 12v5.5h5.5" stroke="url(#g)" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                <defs><linearGradient id="g" x1="0" y1="0" x2="24" y2="24"><stop stop-color="#3395FF"/><stop offset="1" stop-color="#12A574"/></linearGradient></defs>
+            </svg>
+            Recoup
+        </a>
+        <div class="nav-links">
+            {% if user.profile.role == "agent" %}
+                <a href="{% url 'agent-queue' %}">My Queue</a>
+            {% else %}
+                <a href="{% url 'dashboard' %}">Dashboard</a>
+                <a href="{% url 'batch-list' %}" class="active">Batch</a>
+                <a href="{% url 'shadow-mode' %}">Shadow Mode</a>
+                <a href="{% url 'inject-live-event' %}">Inject Live</a>
+                <a href="/admin/">Admin</a>
+            {% endif %}
+            <span class="divider"></span>
+            <a href="{% url 'logout' %}" class="btn-logout">Logout</a>
+        </div>
+    </nav>
+
+    <main>
+        {% if messages %}
+            <div class="container flash-wrap">
+                {% for message in messages %}<div class="flash">{{ message }}</div>{% endfor %}
+            </div>
+        {% endif %}
+
+        <section class="page-header{% if messages %} tight{% endif %}">
+            <div class="container">
+                <span class="section-eyebrow">Every transaction, one place</span>
+                <h1>Event Batch</h1>
+                <p>Every failed payment, abandoned checkout, and overdue invoice Recoup has seen — filter by type or status to trace exactly what happened.</p>
+            </div>
+        </section>
+
+        <section class="section">
+            <div class="container">
+                <form method="get" class="filters">
+                    <select name="event_type">
+                        <option value="">All types</option>
+                        {% for value, label in event_type_choices %}
+                            <option value="{{ value }}" {% if value == selected_event_type %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <select name="status">
+                        <option value="">All statuses</option>
+                        {% for value, label in status_choices %}
+                            <option value="{{ value }}" {% if value == selected_status %}selected{% endif %}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                    <button type="submit">Filter</button>
+                </form>
+
+                <div class="table-card">
+                    <table class="batch-table">
+                        <thead>
+                            <tr><th>Customer</th><th>Type</th><th>Amount</th><th>Status</th><th>Action</th><th></th></tr>
+                        </thead>
+                        <tbody>
+                        {% for event in page_obj %}
+                            <tr>
+                                <td>{{ event.customer.name }}</td>
+                                <td>{{ event.get_event_type_display }}</td>
+                                <td>₹{{ event.amount }}</td>
+                                <td><span class="badge badge-{{ event.status }}">{{ event.get_status_display }}</span></td>
+                                <td>{{ event.decision.chosen_action|default:"—" }}</td>
+                                <td><a href="{% url 'event-detail' event.id %}">View trail</a></td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pagination">
+                    {% if page_obj.has_previous %}<a href="?page={{ page_obj.previous_page_number }}">&laquo; Prev</a>{% endif %}
+                    <span>Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span>
+                    {% if page_obj.has_next %}<a href="?page={{ page_obj.next_page_number }}">Next &raquo;</a>{% endif %}
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="container footer-row">
+                <span>© Recoup — automatic revenue recovery</span>
+            </div>
+        </footer>
+    </main>
+</body>
+</html>
